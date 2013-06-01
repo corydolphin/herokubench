@@ -1,0 +1,2 @@
+module HerokuBench
+end

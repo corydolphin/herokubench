@@ -1,31 +1,31 @@
-# Vulcan
+# Heroku Bench
 
 A build server in the cloud.
 
 ## Install
 
-    $ gem install vulcan
+    $ gem install hbench
 
 ## Usage
 
-    $ vulcan help
+    $ hbench help
     Tasks:
-      vulcan build            # build a piece of software for the heroku cloud using COMMAND as a build command if no COMMAND is...
-      vulcan create APP_NAME  # create a build server on Heroku
-      vulcan help [TASK]      # Describe available tasks or one specific task
-      vulcan update           # update the build server
+      hbench build            # build a piece of software for the heroku cloud using COMMAND as a build command if no COMMAND is...
+      hbench create APP_NAME  # create a build server on Heroku
+      hbench help [TASK]      # Describe available tasks or one specific task
+      hbench update           # update the build server
 
-    $ vulcan help build
+    $ hbench help build
     Usage:
-      vulcan build
+      hbench build
 
     Options:
       -c, [--command=COMMAND]     # the command to run for compilation
       -n, [--name=NAME]           # the name of the library (defaults to the directory name)
       -o, [--output=OUTPUT]       # output build artifacts to this file
-      -p, [--prefix=PREFIX]       # vulcan will look in this path for the compiled artifacts
+      -p, [--prefix=PREFIX]       # hbench will look in this path for the compiled artifacts
       -s, [--source=SOURCE]       # the source directory to build from
-      -d, [--deps=one two three]  # urls of vulcan compiled libraries to build with
+      -d, [--deps=one two three]  # urls of hbench compiled libraries to build with
       -v, [--verbose]             # show the full build output
 
     build a piece of software for the heroku cloud using COMMAND as a build command
@@ -38,14 +38,14 @@ A build server in the cloud.
 You must have a verified Heroku account with your credit card entered to create a build server.
 This is required to add the free Cloudant add-on.
 
-    $ vulcan create vulcan-david
-    Creating vulcan-david... done, stack is cedar
-    http://vulcan-david.herokuapp.com/ | git@heroku.com:vulcan-david.git
+    $ hbench create hbench-david
+    Creating hbench-david... done, stack is cedar
+    http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
     ...
 
 ### Build
 
-    $ vulcan build -s ~/Code/memcached -p /tmp/memcached -c "./autogen.sh && ./configure --prefix=/tmp/memcached && make install"
+    $ hbench build -s ~/Code/memcached -p /tmp/memcached -c "./autogen.sh && ./configure --prefix=/tmp/memcached && make install"
     >> Packaging local directory
     >> Uploading code for build
     >> Building with: ./autogen.sh && ./configure --prefix=/tmp/memcached && make install
@@ -64,7 +64,7 @@ This is required to add the free Cloudant add-on.
 
 ### Keep the Build Server Updated
 
-    $ vulcan update
+    $ hbench update
     Initialized empty Git repository in /private/var/folders/rm/qksq9jk15vx0xcjxkqc8yg5w0000gn/T/d20110921-70016-1iksqwy/.git/
     Counting objects: 176, done.
     Delta compression using up to 8 threads.
@@ -82,7 +82,7 @@ This is required to add the free Cloudant add-on.
            Procfile declares types -> web
     -----> Compiled slug size is 5.5MB
     -----> Launching... done, v5
-           http://vulcan-david.herokuapp.com deployed to Heroku
+           http://hbench-david.herokuapp.com deployed to Heroku
 
-    To git@heroku.com:vulcan-david.git
+    To git@heroku.com:hbench-david.git
      + 2e69a42...eddcb91 master -> master (forced update)
