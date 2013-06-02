@@ -3,12 +3,14 @@ require "heroku/auth"
 require "heroku/command"
 require "heroku/command/base"
 require "heroku/command/help"
+require "heroku/cli"
 require "heroku/plugin"
 require "thor"
 require "tmpdir"
 require "uri"
 require "herokubench"
 require "yaml"
+require "pathname"
 
 class HerokuBench::CLI < Thor
 
@@ -20,7 +22,7 @@ create a bench-server on Heroku
   def create(name)
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
-        system "heroku create #{name} -s cedar --buildpack https://github.com/ddollar/heroku-buildpack-multi.git"
+        system "heroku create #{name} -s cedar --buildpack https://github.com/wcdolphin/heroku-buildpack-apache.git"
       end
     end
     write_config :app => name, :host => "#{name}.herokuapp.com"
@@ -42,14 +44,40 @@ update the bench-server
         system "git remote add origin git@github.com:wcdolphin/heroku-benchserver.git"
         system "git remote add heroku git@#{heroku_git_domain}:#{config[:app]}.git"
         system "git pull origin master >" + null_dev
-        system "git add . >" + null_dev
-        system "git commit -m commit >" + null_dev
-        system "git push heroku -f master"
-        heroku "config:add LD_LIBRARY_PATH=/app/vendor/apache-2.4.4/lib/:$LD_LIBRARY_PATH BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git"
+        # system "git add . >" + null_dev
+        # system "git commit -m commit >" + null_dev
+        system "git push heroku -f master >" +  null_dev
+        # heroku "config:add LD_LIBRARY_PATH=/app/vendor/apache-2.4.4/lib/:$LD_LIBRARY_PATH BUILDPACK_URL=https://github.com/ddollar/heroku-buildpack-multi.git"
         # heroku "config:set PATH=/app/vendor/apache-2.4.4/bin/:$PATH"
       end
     end
   end
+
+  desc "bench site", "bench the bench-server"
+  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
+  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
+  method_option :instances, :alias => "-i", :default => 2, :desc => "Number of instances to run simultaneously, default is 1"
+  def bench(site, c=1000, n=10000, i=1)
+    error "no app yet, create first" unless config[:app]
+
+
+    Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
+    Heroku::Command.load
+    Heroku::Command.run("run", ["ab -c #{options[:concurrency]} -n #{options[:requests]} #{site}", "--app", "#{config[:app]}"])
+
+
+    # Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
+    # Heroku::Command.load
+    # Heroku::Command.run("run", ["ab -c #{c} -n #{n} #{site}", "--app", "#{config[:app]}"])
+
+    # Heroku::CLI.start("run", "ab -c 1000 -n 1000 http://www.google.com/", "--app", "#{config[:app]}")
+
+  end
+
+   desc "hello NAMES", "long desc"
+    def hello(*names)
+        puts "hello #{names.join('; ')}"
+    end
 
 private
  
