@@ -14,6 +14,8 @@ require "yaml"
 require "pathname"
 require "stringio"
 
+# This class is based upon Vulcan, and copies heavily.
+
 class HerokuBench::CLI < Thor
 
     Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"

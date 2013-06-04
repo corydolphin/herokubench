@@ -1,6 +1,6 @@
 # Heroku Bench
 
-A build server in the cloud.
+A build server in the cloud, heavily inspired by Vulcan.
 
 ## Install
 

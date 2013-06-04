@@ -8,8 +8,15 @@ Gem::Specification.new do |gem|
   gem.author      = "Cory Dolphin"
   gem.email       = "wcdolphin@gmail.com"
   gem.homepage    = "https://github.com/wcdolphin/heroku-bench"
-  gem.summary     = "Make it rain on your cloud."
-  gem.description = gem.summary
+  gem.summary     = "A gem to help load testing web applications deployed on AWS or Heroku, using apache-bench"
+  gem.description = <<-EOF
+      Make it rain on the cloud.
+      hbench is a simple gem which eanbles you to easily load test websites, 
+      using a server hosted by Heroku (on AWS). The gem manages deploying
+      an app with no running dynos (free), and abuses the concept of one-off
+      jobs to run the Apache Benchmark, ab. 
+
+  EOF
   gem.executables = "hbench"
 
   gem.files = Dir["**/*"].select { |d| d =~ %r{^(README|bin/|data/|ext/|lib/|server/|spec/|test/)} }
