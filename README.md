@@ -4,85 +4,107 @@ A build server in the cloud, heavily inspired by Vulcan.
 
 ## Install
 
-    $ gem install hbench
+    $ gem install herokubench
 
 ## Usage
 
     $ hbench help
     Tasks:
-      hbench build            # build a piece of software for the heroku cloud using COMMAND as a build command if no COMMAND is...
-      hbench create APP_NAME  # create a build server on Heroku
+      hbench ab site          # run apache-bench, using a one-off Heroku dyno
+      hbench create APP_NAME  # create a bench-server on Heroku
       hbench help [TASK]      # Describe available tasks or one specific task
-      hbench update           # update the build server
+      hbench mab url          # Run apache-bench, using multiple one-off dynos
 
-    $ hbench help build
-    Usage:
-      hbench build
+    $ hbench help ab
+      Usage:
+        hbench ab site
 
-    Options:
-      -c, [--command=COMMAND]     # the command to run for compilation
-      -n, [--name=NAME]           # the name of the library (defaults to the directory name)
-      -o, [--output=OUTPUT]       # output build artifacts to this file
-      -p, [--prefix=PREFIX]       # hbench will look in this path for the compiled artifacts
-      -s, [--source=SOURCE]       # the source directory to build from
-      -d, [--deps=one two three]  # urls of hbench compiled libraries to build with
-      -v, [--verbose]             # show the full build output
+      Options:
+        -c, [--concurrency=CONCURRENCY]  # Number of multiple requests to perform at a time. Default is one request at a time.
+                                         # Default: 1000
+        -n, [--requests=REQUESTS]        # Number of requests to perform for the benchmarking session
+                                         # Default: 10000
 
-    build a piece of software for the heroku cloud using COMMAND as a build command
-    if no COMMAND is specified, a sensible default will be chosen for you
+      run apache-bench (ab), against site, using a one-off Heroku dyno
+    $hbench help mab
+      Usage:
+        hbench mab url
+
+      Options:
+        -c, [--concurrency=CONCURRENCY]  # Number of multiple requests to perform at a time. Default is one request at a time.
+                                         # Default: 1000
+        -n, [--requests=REQUESTS]        # Number of requests to perform for the benchmarking session
+                                         # Default: 10000
+        -p, [--processes=N]              # Number of heroku-bench instances to run simultaneously, default is 1
+                                         # Default: 1
+
+      Run apache-bench, using multiple one-off dynos
+
 
 ## Examples
 
-### Create a Build Server
-
-You must have a verified Heroku account with your credit card entered to create a build server.
-This is required to add the free Cloudant add-on.
-
+### Create a Bench Server
     $ hbench create hbench-david
     Creating hbench-david... done, stack is cedar
     http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
     ...
 
-### Build
+### Bench
 
-    $ hbench build -s ~/Code/memcached -p /tmp/memcached -c "./autogen.sh && ./configure --prefix=/tmp/memcached && make install"
-    >> Packaging local directory
-    >> Uploading code for build
-    >> Building with: ./autogen.sh && ./configure --prefix=/tmp/memcached && make install
-    >> Downloading build artifacts to: /tmp/memcached.tgz
+    $ hbench http://nodejssimple.herokuapp.com/
+      Running one-off dyno, please be patient
+      Running `ab -c 1000 -n 10000 http://nodejssimple.herokuapp.com/` attached to terminal... up, run.4045
+      This is ApacheBench, Version 2.3 <$Revision: 1430300 $>
+      Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+      Licensed to The Apache Software Foundation, http://www.apache.org/
 
-    $ tar tvf /tmp/memcached.tgz
-    drwx------  0 u24714 24714       0 Sep 21 20:25 bin/
-    -rwxr-xr-x  0 u24714 24714  273082 Sep 21 20:25 bin/memcached
-    drwx------  0 u24714 24714       0 Sep 21 20:25 include/
-    drwx------  0 u24714 24714       0 Sep 21 20:25 include/memcached/
-    -rw-r--r--  0 u24714 24714   14855 Sep 21 20:25 include/memcached/protocol_binary.h
-    drwx------  0 u24714 24714       0 Sep 21 20:25 share/
-    drwx------  0 u24714 24714       0 Sep 21 20:25 share/man/
-    drwx------  0 u24714 24714       0 Sep 21 20:25 share/man/man1/
-    -rw-r--r--  0 u24714 24714    5304 Sep 21 20:25 share/man/man1/memcached.1
+      Benchmarking nodejssimple.herokuapp.com (be patient)
+      Completed 1000 requests
+      Completed 2000 requests
+      Completed 3000 requests
+      Completed 4000 requests
+      Completed 5000 requests
+      Completed 6000 requests
+      Completed 7000 requests
+      Completed 8000 requests
+      Completed 9000 requests
+      Completed 10000 requests
+      Finished 10000 requests
 
-### Keep the Build Server Updated
 
-    $ hbench update
-    Initialized empty Git repository in /private/var/folders/rm/qksq9jk15vx0xcjxkqc8yg5w0000gn/T/d20110921-70016-1iksqwy/.git/
-    Counting objects: 176, done.
-    Delta compression using up to 8 threads.
-    Compressing objects: 100% (156/156), done.
-    Writing objects: 100% (176/176), 326.86 KiB, done.
-    Total 176 (delta 5), reused 0 (delta 0)
+      Server Software:
+      Server Hostname:        nodejssimple.herokuapp.com
+      Server Port:            80
 
-    -----> Heroku receiving push
-    -----> Node.js app detected
-    -----> Vendoring node 0.4.7
-    -----> Installing dependencies with npm 1.0.27
+      Document Path:          /
+      Document Length:        12 bytes
 
-           Dependencies installed
-    -----> Discovering process types
-           Procfile declares types -> web
-    -----> Compiled slug size is 5.5MB
-    -----> Launching... done, v5
-           http://hbench-david.herokuapp.com deployed to Heroku
+      Concurrency Level:      1000
+      Time taken for tests:   9.687 seconds
+      Complete requests:      10000
+      Failed requests:        0
+      Write errors:           0
+      Total transferred:      1322840 bytes
+      HTML transferred:       120000 bytes
+      Requests per second:    1032.32 [#/sec] (mean)
+      Time per request:       968.692 [ms] (mean)
+      Time per request:       0.969 [ms] (mean, across all concurrent requests)
+      Transfer rate:          133.36 [Kbytes/sec] received
 
-    To git@heroku.com:hbench-david.git
-     + 2e69a42...eddcb91 master -> master (forced update)
+      Connection Times (ms)
+                    min  mean[+/-sd] median   max
+      Connect:        1    8  12.8      3      70
+      Processing:    75  513 742.4    297    5077
+      Waiting:       75  512 742.5    296    5077
+      Total:        121  520 743.3    301    5087
+
+      Percentage of the requests served within a certain time (ms)
+        50%    301
+        66%    373
+        75%    403
+        80%    566
+        90%    889
+        95%   1805
+        98%   3967
+        99%   4041
+       100%   5087 (longest request)

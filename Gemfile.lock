@@ -33,5 +33,9 @@ GEM
 PLATFORMS
   ruby
 
+if RUBY_PLATFORM=~ /win32/ 
+   gem "windows-only-gem"
+end
+
 DEPENDENCIES
   herokubench!

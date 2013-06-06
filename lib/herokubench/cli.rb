@@ -13,6 +13,7 @@ require "herokubench"
 require "yaml"
 require "pathname"
 require "stringio"
+require 'tempfile'
 
 # This class is based upon Vulcan, and copies heavily.
 
@@ -20,7 +21,7 @@ class HerokuBench::CLI < Thor
 
     Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
     Heroku::Command.load
-
+    default_task = :ab
   desc "create APP_NAME", <<-DESC
 create a bench-server on Heroku
 
@@ -42,12 +43,50 @@ create a bench-server on Heroku
   end
 
 
-  desc "update", <<-DESC
-update the bench-server
+  desc "ab site", "run apache-bench, using a one-off Heroku dyno"
+  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
+  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
+  def ab(site, c=1000, n=10000)
+    error "no app yet, create first" unless config[:app]
+    puts "Running one-off dyno, please be patient"
+    puts capture { Heroku::Command.run("run", ["ab -c #{options[:concurrency]} -n #{options[:requests]} #{site}", "--app", "#{config[:app]}"])}
+  end
 
-  DESC
 
-  def update
+  desc "mab url", "Run apache-bench, using multiple one-off dynos"
+  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
+  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
+  method_option :processes, :aliases => "-p", :default => 1, :type => :numeric, :desc => "Number of heroku-bench instances to run simultaneously, default is 1"
+  def mab(site, c=1000, n=10000)
+    error "no app yet, create first" unless config[:app]
+
+    puts "#{options[:processes]}"
+    bencher_path = File.expand_path("../bencher.rb",__FILE__)
+
+    results = Array.new(options[:processes])
+    n = 0
+    until n == options[:processes] do
+      puts "Starting Instance##{n+1} of #{options[:processes]}"
+      results[n] = Tempfile.new("hbench_out #{n}")
+
+      spawn( "ruby #{bencher_path} \"ab -c #{options[:concurrency]} -n #{options[:requests]} #{site} \" --app #{config[:app]}", :out=>results[n].path)
+      n = n + 1
+    end
+
+    Process.waitall
+
+    results.each do |f| 
+      puts f.path
+      puts f.read
+      f.close
+      f.unlink
+    end
+
+
+  end
+
+private
+   def update
     error "no app yet, create first" unless config[:app]
 
     Dir.mktmpdir do |dir|
@@ -61,18 +100,6 @@ update the bench-server
     end
   end
 
-  desc "ab site", "run apache-bench, from the cloud!"
-  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
-  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
-  method_option :instances, :alias => "-i", :default => 2, :desc => "Number of instances to run simultaneously, default is 1"
-  def ab(site, c=1000, n=10000, i=1)
-    error "no app yet, create first" unless config[:app]
-    puts "Running one-off dyno, please be patient"
-    puts capture { Heroku::Command.run("run", ["ab -c #{options[:concurrency]} -n #{options[:requests]} #{site}", "--app", "#{config[:app]}"])}
-  end
-
-private
- 
   def capture
     results = $stdout = StringIO.new
     yield

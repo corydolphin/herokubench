@@ -11,7 +11,8 @@ Gem::Specification.new do |gem|
   gem.summary     = "A gem to help load testing web applications deployed on AWS or Heroku, using apache-bench"
   gem.description = <<-EOF
       Make it rain on the cloud.
-      hbench is a simple gem which eanbles you to easily load test websites, 
+
+      herokubench, or hbench for short, is a simple gem which eanbles you to easily load test websites, 
       using a server hosted by Heroku (on AWS). The gem manages deploying
       an app with no running dynos (free), and abuses the concept of one-off
       jobs to run the Apache Benchmark, ab. 
@@ -24,5 +25,10 @@ Gem::Specification.new do |gem|
   gem.add_dependency "heroku",         ">= 2.26.0", "< 3.0"
   gem.add_dependency "thor",           "~> 0.14.6"
 
-  gem.post_install_message = "Please run 'hbench update' to update your build server."
+  gem.extensions = ["ext/mkrf_conf.rb"]
+
+
+
+
+  gem.post_install_message = "Please run 'hbench create' to create your bench-server."
 end
