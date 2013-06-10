@@ -18,15 +18,17 @@ require 'tempfile'
 # This class is based upon Vulcan, and copies heavily.
 
 class HerokuBench::CLI < Thor
+  class_option "verbose",  :type => :boolean
+  check_unknown_options!  :except => [:ab, :multi]
+  default_task :ab
 
-    Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
-    Heroku::Command.load
-    default_task = :ab
-  desc "create APP_NAME", <<-DESC
-create a bench-server on Heroku
 
-  DESC
+  class_options["verbose"] = false if class_options["verbose"].nil?
+  Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
+  Heroku::Command.load
+  
 
+  desc "create APP_NAME", "Create your personal bench-server on Heroku"
   def create(name="")
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
@@ -35,7 +37,7 @@ create a bench-server on Heroku
         args.delete("")
         result = capture { Heroku::Command.run("create", args) }
         name = /\s(.+)\.\.\./.match(result).captures[0]
-        puts "Creatied app: #{name}"
+        puts "Created your personal benchserver: #{name}"
       end
     end
     write_config :app => name, :host => "#{name}.herokuapp.com"
@@ -43,33 +45,37 @@ create a bench-server on Heroku
   end
 
 
-  desc "ab site", "run apache-bench, using a one-off Heroku dyno"
-  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
-  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
-  def ab(site, c=1000, n=10000)
-    error "no app yet, create first" unless config[:app]
+  desc "ab URL", "Run apache-bench, using a single, one-off Heroku dyno"
+  def ab(*args)
+    error "no app yet, please create first" unless config[:app]
     puts "Running one-off dyno, please be patient"
-    puts capture { Heroku::Command.run("run", ["ab -c #{options[:concurrency]} -n #{options[:requests]} #{site}", "--app", "#{config[:app]}"])}
+    Heroku::Command.run("run", ["ab #{args.join(' ')}", "--app", "#{config[:app]}"])
   end
 
 
-  desc "mab url", "Run apache-bench, using multiple one-off dynos"
-  method_option :concurrency , :aliases => "-c", :default => 1000, :desc => "Number of multiple requests to perform at a time. Default is one request at a time."
-  method_option :requests , :aliases => "-n", :default => 10000, :desc => "Number of requests to perform for the benchmarking session"
-  method_option :processes, :aliases => "-p", :default => 1, :type => :numeric, :desc => "Number of heroku-bench instances to run simultaneously, default is 1"
-  def mab(site, c=1000, n=10000)
-    error "no app yet, create first" unless config[:app]
 
-    puts "#{options[:processes]}"
+
+  desc "multi URL", "Run apache-bench, using multiple one-off dynos"
+  def multi(dynos, *args)
+    error "no app yet, create first" unless config[:app]
+    puts "In order to use multi, you must specify the number " \
+          "of one-off dynos to use concurrently. \n\tExample usage: "\
+          "\n \thb multi 5 -c 1000 -n 10000 http://www.google.com/"
+
     bencher_path = File.expand_path("../bencher.rb",__FILE__)
 
-    results = Array.new(options[:processes])
+    dynos = dynos.to_i
+    results = Array.new(dynos)
     n = 0
-    until n == options[:processes] do
-      puts "Starting Instance##{n+1} of #{options[:processes]}"
+
+    ab_command = "ab #{args.join(' ')}"
+
+
+    until n == dynos do
+      puts "Starting Instance##{n+1} of #{dynos}"
       results[n] = Tempfile.new("hbench_out #{n}")
 
-      spawn( "ruby #{bencher_path} \"ab -c #{options[:concurrency]} -n #{options[:requests]} #{site} \" --app #{config[:app]}", :out=>results[n].path)
+      spawn( "ruby #{bencher_path} \"#{ab_command} \" --app #{config[:app]}", :out=>results[n].path)
       n = n + 1
     end
 
@@ -86,7 +92,8 @@ create a bench-server on Heroku
   end
 
 private
-   def update
+
+  def update
     error "no app yet, create first" unless config[:app]
 
     Dir.mktmpdir do |dir|
@@ -108,6 +115,8 @@ private
     results.rewind
     return results.read
   end
+
+
 
  #Yeah, we are windows compatible. Because you should be too.
  def null_dev

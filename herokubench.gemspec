@@ -18,16 +18,12 @@ Gem::Specification.new do |gem|
       jobs to run the Apache Benchmark, ab. 
 
   EOF
-  gem.executables = "hbench"
+  gem.executables = "hb"
 
   gem.files = Dir["**/*"].select { |d| d =~ %r{^(README|bin/|data/|ext/|lib/|server/|spec/|test/)} }
 
   gem.add_dependency "heroku",         ">= 2.26.0", "< 3.0"
-  gem.add_dependency "thor",           "~> 0.14.6"
-
-  gem.extensions = ["ext/mkrf_conf.rb"]
-
-
+  gem.add_dependency "thor",           "~> 0.18.1"
 
 
   gem.post_install_message = "Please run 'hbench create' to create your bench-server."
