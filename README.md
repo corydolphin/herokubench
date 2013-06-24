@@ -8,50 +8,29 @@ A build server in the cloud, heavily inspired by Vulcan.
 
 ## Usage
 
-    $ hbench help
-    Tasks:
-      hbench ab site          # run apache-bench, using a one-off Heroku dyno
-      hbench create APP_NAME  # create a bench-server on Heroku
-      hbench help [TASK]      # Describe available tasks or one specific task
-      hbench mab url          # Run apache-bench, using multiple one-off dynos
+    $ hb help
+    ommands:
+      hb ab URL           # Run apache-bench, using a single, one-off Heroku dyno
+      hb create APP_NAME  # Create your personal bench-server on Heroku
+      hb help [COMMAND]   # Describe available commands or one specific command
+      hb multi URL        # Run apache-bench, using multiple one-off dynos
+    
+    Options:
+      [--verbose]
 
-    $ hbench help ab
-      Usage:
-        hbench ab site
-
-      Options:
-        -c, [--concurrency=CONCURRENCY]  # Number of multiple requests to perform at a time. Default is one request at a time.
-                                         # Default: 1000
-        -n, [--requests=REQUESTS]        # Number of requests to perform for the benchmarking session
-                                         # Default: 10000
-
-      run apache-bench (ab), against site, using a one-off Heroku dyno
-    $hbench help mab
-      Usage:
-        hbench mab url
-
-      Options:
-        -c, [--concurrency=CONCURRENCY]  # Number of multiple requests to perform at a time. Default is one request at a time.
-                                         # Default: 1000
-        -n, [--requests=REQUESTS]        # Number of requests to perform for the benchmarking session
-                                         # Default: 10000
-        -p, [--processes=N]              # Number of heroku-bench instances to run simultaneously, default is 1
-                                         # Default: 1
-
-      Run apache-bench, using multiple one-off dynos
 
 
 ## Examples
 
 ### Create a Bench Server
-    $ hbench create hbench-david
+    $ hb create hbench-david
     Creating hbench-david... done, stack is cedar
     http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
     ...
 
 ### Bench
 
-    $ hbench http://nodejssimple.herokuapp.com/
+    $ hb http://nodejssimple.herokuapp.com/
       Running one-off dyno, please be patient
       Running `ab -c 1000 -n 10000 http://nodejssimple.herokuapp.com/` attached to terminal... up, run.4045
       This is ApacheBench, Version 2.3 <$Revision: 1430300 $>

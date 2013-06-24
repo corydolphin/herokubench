@@ -12,19 +12,20 @@ Gem::Specification.new do |gem|
   gem.description = <<-EOF
       Make it rain on the cloud.
 
-      herokubench, or hbench for short, is a simple gem which eanbles you to easily load test websites, 
+      herokubench, or hb for short, is a simple gem which eanbles you to easily load test websites,
       using a server hosted by Heroku (on AWS). The gem manages deploying
       an app with no running dynos (free), and abuses the concept of one-off
-      jobs to run the Apache Benchmark, ab. 
+      jobs to run the Apache Benchmark, ab.
 
+      Confused? Checkout `hb help`
   EOF
-  gem.executables = "hb"
+  gem.executables = "hbench"
 
   gem.files = Dir["**/*"].select { |d| d =~ %r{^(README|bin/|data/|ext/|lib/|server/|spec/|test/)} }
 
   gem.add_dependency "heroku",         ">= 2.26.0", "< 3.0"
   gem.add_dependency "thor",           "~> 0.18.1"
-
+  gem.add_dependency "ruby-progressbar",">= 1.1.1"
 
   gem.post_install_message = "Please run 'hbench create' to create your bench-server."
 end
