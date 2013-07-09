@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path("../../lib", __FILE__)
+
+require "tmpdir"
+require "uri"
+require "herokubench/cli"
+
+HerokuBench::CLI.start

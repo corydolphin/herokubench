@@ -19,8 +19,8 @@ Gem::Specification.new do |gem|
 
       Confused? Checkout `hb help`
   EOF
-  gem.executables = "hbench"
-
+  gem.executables = ["hbench", "herokubench"]
+  gem.license     = "MIT"
   gem.files = Dir["**/*"].select { |d| d =~ %r{^(README|bin/|data/|ext/|lib/|server/|spec/|test/)} }
 
   gem.add_dependency "heroku",         ">= 2.26.0", "< 3.0"
