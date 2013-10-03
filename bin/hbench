@@ -6,4 +6,7 @@ require "tmpdir"
 require "uri"
 require "herokubench/cli"
 
+STDOUT.sync = true
+
+
 HerokuBench::CLI.start

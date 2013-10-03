@@ -6,6 +6,7 @@ require "heroku/command/help"
 require "heroku/command/apps"
 require "heroku/cli"
 require "heroku/plugin"
+STDOUT.sync = true
 
 Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
 Heroku::Command.load
