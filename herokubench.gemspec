@@ -25,7 +25,7 @@ Gem::Specification.new do |gem|
 
   gem.add_dependency "heroku",         ">= 2.26.0", "< 3.0"
   gem.add_dependency "thor",           "~> 0.18.1"
-  gem.add_dependency "ruby-progressbar",">= 1.1.1"
+  gem.add_dependency "ruby-progressbar",">= 1.2.0"
 
   gem.post_install_message = "Please run 'hbench create' to create your bench-server."
 end
