@@ -123,16 +123,14 @@ class HerokuBench::CLI < Thor
       results.each  do |tfile|
         summary_result.add_result(ApacheBenchResult.new(tfile))
       end 
-      puts summary_result.get_summary_result()
+      summary_result.print()
 
 
     rescue Interrupt
-      print "\nExiting...Please be patient"
-      running_procs.keys.each do |pid|
-        Process.kill("INT", pid)
-        print "."
-      end
-      print "done.\n"
+      say "Exiting...Please be patient"
+      kill_running_procs(running_procs)
+      kill_running_dynos()
+      say "Done"
     rescue => exception
       say("HerokuBench ran into an unexpected exception. Please contact @wcdolphin",:red)
       say(exception,:red)
@@ -200,6 +198,26 @@ class HerokuBench::CLI < Thor
   #   say "\t across dynos"
   #   summary[:response_time_cdf].each{|k,v| say format(k+"",v, 15)}
   # end
+
+  def kill_running_procs(running_procs)
+      print "Killing running processes"
+      running_procs.keys.each do |pid|
+        Process.kill("INT", pid)
+        print "."
+      end
+  end
+
+  def kill_running_dynos()
+    print "\nKilling running dynos"
+    result = capture { Heroku::Command.run("ps", ["--app", "#{config[:app]}"]) }
+    result.split("\n").each do |line|
+      dyno_name = line.scan(/(run.[\d]+)/)
+      unless dyno_name.nil? or dyno_name.empty?
+        capture {Heroku::Command.run("ps:stop", ["#{dyno_name[0][0]}","--app", "#{config[:app]}"])}
+        print '.'
+      end
+    end
+  end
 
   def format(k,v, pad)
     "#{fill(k,pad)}#{v.map{|val| fill(serialize val)}.join('')}\r\n"

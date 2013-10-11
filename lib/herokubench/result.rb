@@ -1,8 +1,27 @@
+$:.unshift File.expand_path("../../lib", __FILE__)
+require "thor"
+require "digest/sha1"
+require "heroku/auth"
+require "heroku/command"
+require "heroku/command/base"
+require "heroku/command/help"
+require "heroku/command/apps"
+require "heroku/cli"
+require "heroku/plugin"
+require "thor"
+require "tmpdir"
+require "uri"
+require "herokubench"
+require "yaml"
+require "pathname"
+require "stringio"
+require 'tempfile'
+require 'ruby-progressbar'
+
+
 class BaseResult
 	@@summable_fields = []
 	@@maxable_fields = []
-
-
 end
 
 class ApacheBenchResult < BaseResult
@@ -13,7 +32,7 @@ class ApacheBenchResult < BaseResult
     :response_time_cdf=>/(\d+%)\s+(\d+)/
   }
   @@summable_fields = ["Complete requests","Failed requests", "Write errors", "Requests per second", "Total transferred", "HTML transferred", "Concurrency Level"]
-  @@averageable_fields = ["Connect", "Processing", "Waiting", "Total", "Time per request"]
+  @@averageable_fields = ["Connect", "Processing", "Waiting", "Total", "Time per request", "Time taken for tests"]
   @@maxable_fields    = ["50%", "66%", "75%", "80%", "90%", "95%", "98%", "99%","100%"]
 
 	def initialize(temp_file)
@@ -63,21 +82,44 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 		summary_result_hash.each do |result_type, result_hash|
 			result_hash.each do |result_name, result_values| 
 				if @@summable_fields.include? result_name
-					result_hash[result_name] = result_values.inject(:+)			
+					summary_result_hash[result_type][result_name] = result_values.inject(:+)			
 				elsif @@averageable_fields.include? result_name
-					result_hash[result_name] = deep_average result_values
+					summary_result_hash[result_type][result_name] = deep_average(result_values)
 				elsif  @@maxable_fields.include? result_name
-					result_hash[result_name] = result_values.max
+					summary_result_hash[result_type][result_name] = result_values.max
 				else
-					result_hash[result_name] = result_values.first
+					summary_result_hash[result_type][result_name] = result_values.first
 				end
 			end
 		end
 
 		summary_result_hash		
 	end
+	def print
+		# puts "-----"
+		summary = self.get_summary_result()
+		# puts summary
+		puts "-----"
+		puts "\t Cumulative results, summed across dynos"
+		puts ""
+		summary[:generic_result].each{|k,v| printf "%-20s %s\n", k + ":",v}
+
+		puts ""
+		puts "\t Connection Times (ms), median across dynos"
+		printf "%-20s %-6s %-6s %-6s %s\n", "","min", "mean", "[+/-sd]" ,"median","max"
+		summary[:connection_times].each do |k,v|
+			printf "%-20s %-6s %-6s %-6s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
+		end
+		puts ""
+		puts "\t Percentage of the requests served within a certain time (ms)"
+		puts "\t across dynos"
+		summary[:response_time_cdf].each{|k,v| printf "  %-20s %s\n", k,v}
+
+	end
 
 end
+
+
 
 private
 
@@ -89,7 +131,7 @@ def deep_average(arr)
 	result = []
 	if not arr.empty? and arr[0].is_a? Array #we need to do a 'deep' average.
 		arr[0].each_index do |i|
-			result[i] = arr.collect {|a| a[i]/arr.length}.inject(:+)
+			result[i] = arr.collect {|a| a[i]/arr.length.to_f}.inject(:+)
 		end
 		result
 	else	
