@@ -19,13 +19,13 @@ require 'tempfile'
 require 'ruby-progressbar'
 
 
-class BaseResult
+class BaseResult < Thor
 	@@summable_fields = []
 	@@maxable_fields = []
 end
 
 class ApacheBenchResult < BaseResult
-  attr_accessor :result_hash
+  attr_accessor :result_hash, :result_tfile
   @@result_regexes = {
     :connection_times=>/(.+):\s+\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)/,
     :generic_result=> /^([\w\s]+):\s*([\d|\.]+)/,
@@ -37,7 +37,7 @@ class ApacheBenchResult < BaseResult
 
 	def initialize(temp_file)
 		@result_hash = {}
-
+		@result_tfile = temp_file
 		temp_file.each_line do |line|
 		  @@result_regexes.each do |type,v|
 		    group = line.scan(v)
@@ -51,72 +51,80 @@ class ApacheBenchResult < BaseResult
 		    end
 		  end
 		 end
-		puts @result_hash
 	end
 
 end
 
 class ApacheBenchSummaryResult < ApacheBenchResult
-
-	def initialize()
-		@results = []
-	end
-
-	def add_result(ab_result)
-		@results.push ab_result
-	end
-
-	def get_summary_result()
-		summary_result_hash = {}
-
-		@results.each do |result|
-			result.result_hash.each do |result_type, res_type_hashes| 
-				summary_result_hash[result_type] = {} unless summary_result_hash.has_key? result_type
-				res_type_hashes.each do |result_key, value|
-					summary_result_hash[result_type][result_key] = [] unless summary_result_hash[result_type].has_key? result_key
-					summary_result_hash[result_type][result_key].push value
-				end
-			end	
+	no_commands do
+		def initialize()
+			@results = []
 		end
 
-		summary_result_hash.each do |result_type, result_hash|
-			result_hash.each do |result_name, result_values| 
-				if @@summable_fields.include? result_name
-					summary_result_hash[result_type][result_name] = result_values.inject(:+)			
-				elsif @@averageable_fields.include? result_name
-					summary_result_hash[result_type][result_name] = deep_average(result_values)
-				elsif  @@maxable_fields.include? result_name
-					summary_result_hash[result_type][result_name] = result_values.max
-				else
-					summary_result_hash[result_type][result_name] = result_values.first
+		def add_result(ab_result)
+			@results.push ab_result
+		end
+
+		def get_summary_result()
+			summary_result_hash = {}
+
+			@results.each do |result|
+				result.result_hash.each do |result_type, res_type_hashes| 
+					summary_result_hash[result_type] = {} unless summary_result_hash.has_key? result_type
+					res_type_hashes.each do |result_key, value|
+						summary_result_hash[result_type][result_key] = [] unless summary_result_hash[result_type].has_key? result_key
+						summary_result_hash[result_type][result_key].push value
+					end
+				end	
+			end
+
+			summary_result_hash.each do |result_type, result_hash|
+				result_hash.each do |result_name, result_values| 
+					if @@summable_fields.include? result_name
+						summary_result_hash[result_type][result_name] = result_values.inject(:+)			
+					elsif @@averageable_fields.include? result_name
+						summary_result_hash[result_type][result_name] = deep_average(result_values)
+					elsif  @@maxable_fields.include? result_name
+						summary_result_hash[result_type][result_name] = result_values.max
+					else
+						summary_result_hash[result_type][result_name] = result_values.first
+					end
 				end
 			end
+
+			summary_result_hash		
 		end
 
-		summary_result_hash		
-	end
-	def print
-		# puts "-----"
-		summary = self.get_summary_result()
-		# puts summary
-		puts "-----"
-		puts "\t Cumulative results, summed across dynos"
-		puts ""
-		summary[:generic_result].each{|k,v| printf "%-20s %s\n", k + ":",v}
-
-		puts ""
-		puts "\t Connection Times (ms), median across dynos"
-		printf "%-20s %-6s %-6s %-6s %s\n", "","min", "mean", "[+/-sd]" ,"median","max"
-		summary[:connection_times].each do |k,v|
-			printf "%-20s %-6s %-6s %-6s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
+		def is_empty?
+			self.get_summary_result().empty?
 		end
-		puts ""
-		puts "\t Percentage of the requests served within a certain time (ms)"
-		puts "\t across dynos"
-		summary[:response_time_cdf].each{|k,v| printf "  %-20s %s\n", k,v}
+		def print
+			summary = self.get_summary_result()
+			if self.is_empty?
+				say("Herokubench ran into an error while executing ApacheBench. It is likely there was a syntax error in your command. Please see output below.", :red)
+				@results.first.result_tfile.rewind
+				@results.first.result_tfile.each_line do |line|
+					puts line
+				end
+				return
+			end
+			puts "\t Cumulative results, summed across dynos"
+			puts ""
+			summary[:generic_result].each{|k,v| printf "%-20s %s\n", k + ":",v}
 
+			puts ""
+			puts "\t Connection Times (ms), median across dynos"
+			printf "%-20s %-6s %-6s %-6s %s\n", "","min", "mean", "[+/-sd]" ,"median","max"
+			summary[:connection_times].each do |k,v|
+				printf "%-20s %-6s %-6s %-6s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
+			end
+			puts ""
+			puts "\t Percentage of the requests served within a certain time (ms)"
+			puts "\t across dynos"
+			summary[:response_time_cdf].each{|k,v| printf "  %-20s %s\n", k,v}
+
+		end
 	end
-
 end
 
 

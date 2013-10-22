@@ -21,10 +21,9 @@ require 'herokubench/result'
 # This class is based upon Vulcan, and copies heavily.
 
 class HerokuBench::CLI < Thor
-  class_option "verbose",  :type => :boolean
+  class_option :verbose, :type => :boolean
   check_unknown_options!  :except => [:ab, :multi]
   default_task :ab
-  class_options["verbose"] = false if class_options["verbose"].nil?
   Heroku.user_agent = "heroku-gem/#{Heroku::VERSION} (#{RUBY_PLATFORM}) ruby/#{RUBY_VERSION}"
   Heroku::Command.load
 
@@ -57,10 +56,18 @@ class HerokuBench::CLI < Thor
   LONGDESC
 
   def ab(*args)
-    puts config[:app]
-    error "no app yet, please create first" unless config[:app]
-    puts "Running one-off dyno, please be patient"
-    Heroku::Command.run("run", ["ab #{args.join(' ')}", "--app", "#{config[:app]}"])
+      num_requests_index = args.index("-n") #hack to extract number of requests from the ab arguments.
+      concurrency_level_index = args.index("-c") #hack to extract number of requests from the ab arguments.
+      unless concurrency_level_index.nil? or num_requests_index.nil? then
+        num_requests = args[num_requests_index + 1].to_i
+        concurrency_level = args[concurrency_level_index + 1].to_i
+        num_dynos = (concurrency_level/50).to_i
+        say "Inferred #{num_dynos} instances" if options[:verbose]
+        args[args.index("-n") + 1] = num_requests / num_dynos
+        args[args.index("-c") + 1] = concurrency_level/ num_dynos
+      end
+      num_dynos ||= 1
+      multi(num_dynos, *args)
   end
 
 
@@ -78,25 +85,25 @@ class HerokuBench::CLI < Thor
   def multi(dynos, *args)
     error "no app yet, create first" unless config[:app]
     error "Number of dynos must be an integer greater than 1" unless dynos.to_i >= 1
+
     begin
-      num_requests = args[args.index("-n") + 1].to_i #hack to extract number of requests from the ab arguments.
+      say "Benching with #{dynos} dynos and arguments #{args}" if options[:verbose]
 
       bencher_path = File.expand_path("../bencher.rb",__FILE__)
-
       numdynos = dynos.to_i
       results = []
       running_procs = {}
       progesses = {}
       ab_command = "ab #{args.join(' ')}"
 
-      p_bar = ProgressBar.create(:title=>'Benching',:total=>numdynos*num_requests, :smoothing => 0.6)
+      p_bar = ProgressBar.create(:title=>'Benching',:total=>numdynos*10, :smoothing => 0.6)
 
       numdynos.times do  |n|
         t_file = Tempfile.new("hbench_out_#{n}") 
         pid = spawn( "ruby #{bencher_path} \"#{ab_command} \" --app #{config[:app]}", :out=>t_file.path, :err=>null_dev)
         running_procs[pid] = t_file
         progesses[pid] = 0
-        puts t_file.path
+        puts t_file.path if options[:verbose]
       end
 
 
@@ -105,8 +112,8 @@ class HerokuBench::CLI < Thor
           complete_results = Timeout.timeout(1) do
             pid = Process.wait
             results.push running_procs.delete(pid)
-            p_bar.progress += num_requests - progesses[pid]
-            progesses[pid] = num_requests
+            p_bar.progress += 10 - progesses[pid]
+            progesses[pid] = 10
           end
         rescue Timeout::Error
           running_procs.each do |pid, tfile|
@@ -119,10 +126,10 @@ class HerokuBench::CLI < Thor
       
       summary_result  = ApacheBenchSummaryResult.new
 
-      puts results
       results.each  do |tfile|
         summary_result.add_result(ApacheBenchResult.new(tfile))
       end 
+
       summary_result.print()
 
 
@@ -152,6 +159,8 @@ class HerokuBench::CLI < Thor
     ((float = v.round(1)) && (float % 1.0 == 0) ? float.to_i.to_s : float.to_s) rescue v.to_s
   end
 
+  # Returns the approximate progress for apache bench from a given file.
+  # Each increment is 10%, as per the output of ApacheBench.
   def get_progress(tfile)
     tfile.rewind
 
@@ -159,45 +168,8 @@ class HerokuBench::CLI < Thor
       group = line.scan(/Completed (\d+) requests/)
       group = group.empty? ? 0 : group[0][0]
     end
-    progress = progress.last.to_i
+    progress.length
   end
-  # def summarize(results)
-  #   summary = {}
-
-  #   results.each do |result|
-  #     result.each do |type, hash|
-  #       summary[type] = {} if summary[type].nil?
-  #       hash.each do |k,v|
-  #         summary[type][k] = [0.0] * v.length if summary[type][k].nil?
-  #         v.each_index do |i|
-  #           if not @@summable_fields.index(k).nil?
-  #             summary[type][k][i] += v[i]
-  #           elsif not @@medianable_fields.index(k).nil?
-  #             summary[type][k][i] += v[i] / results.length.to_f
-  #           elsif not @@maxable_fields.index(k).nil?
-  #             summary[type][k][i] = [v[i], summary[type][k][i]].max
-  #           else
-  #             summary[type][k][i] = v[i]
-  #           end
-  #         end
-  #       end
-  #     end
-  #   end
-
-  #   say "\tCumulative results, summed across dynos"
-  #   say ""
-  #   summary[:generic_result].each{|k,v| say format(k+":",v, 25)}
-
-  #   say ""
-  #   say "\t Connection Times (ms), median across dynos"
-  #   say format("",["min", "mean", "[+/-sd]" ,"median","max"],15)
-  #   summary[:connection_times].each{|k,v| say format(k+":",v, 15)}
-
-  #   say ""
-  #   say "\t Percentage of the requests served within a certain time (ms)"
-  #   say "\t across dynos"
-  #   summary[:response_time_cdf].each{|k,v| say format(k+"",v, 15)}
-  # end
 
   def kill_running_procs(running_procs)
       print "Killing running processes"
