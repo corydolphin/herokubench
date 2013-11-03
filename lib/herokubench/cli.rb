@@ -96,7 +96,7 @@ class HerokuBench::CLI < Thor
       progesses = {}
       ab_command = "ab #{args.join(' ')}"
 
-      p_bar = ProgressBar.create(:title=>'Benching',:total=>numdynos*10, :smoothing => 0.6)
+      p_bar = ProgressBar.create(:title=>'Benching',:total=>1 + numdynos*100)
 
       numdynos.times do  |n|
         t_file = Tempfile.new("hbench_out_#{n}") 
@@ -112,8 +112,8 @@ class HerokuBench::CLI < Thor
           complete_results = Timeout.timeout(1) do
             pid = Process.wait
             results.push running_procs.delete(pid)
-            p_bar.progress += 10 - progesses[pid]
-            progesses[pid] = 10
+            p_bar.progress += 100 - progesses[pid]
+            progesses[pid] = 100
           end
         rescue Timeout::Error
           running_procs.each do |pid, tfile|
@@ -123,6 +123,7 @@ class HerokuBench::CLI < Thor
           end
         end
       end
+      p_bar.finish
       
       summary_result  = ApacheBenchSummaryResult.new
 
@@ -164,11 +165,12 @@ class HerokuBench::CLI < Thor
   def get_progress(tfile)
     tfile.rewind
 
+
     progress = tfile.each_line.collect do |line|
       group = line.scan(/Completed (\d+) requests/)
       group = group.empty? ? 0 : group[0][0]
     end
-    progress.length
+    progress.reject{|x| x == 0}.length * 10
   end
 
   def kill_running_procs(running_procs)
