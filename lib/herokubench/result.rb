@@ -60,6 +60,17 @@ class ApacheBenchResult < BaseResult
        end
        resulting_hash
   	end
+
+
+    # Returns the progress of this particular Dyno/Bench Result
+    def get_progress()
+      @result_tfile.rewind
+      progress = @result_tfile.each_line.collect do |line|
+        group = line.scan(/Completed (\d+) requests/)
+        group = group.empty? ? 0 : group[0][0]
+      end
+      progress.reject{|x| x == 0}.length * 10
+    end
   end
 end
 
@@ -72,6 +83,10 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 		def add_result(ab_result)
 			@results.push ab_result
 		end
+
+    def get_progress()
+      @results.collect{|r| r.get_progress}.inject(:+)
+    end
 
 		def get_summary_result()
 			summary_result_hash = {}
@@ -99,7 +114,7 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 				end
 			end
 
-			summary_result_hash
+			summary_result_hash  
 		end
 
 		def print
@@ -150,5 +165,24 @@ def deep_average(arr)
 	end
 end
 
+  # Parses a value as a Float or integer, defaulting to the original
+  # string if unsuccesful.
+  def parse(v)
+    ((float = Float(v)) && (float % 1.0 == 0) ? float.to_i : float) rescue v
+  end
+
+  # pretty much the opposite of parse. Returns a string of the best way
+  # to represent a float, int or string value
+  def serialize(v)
+    ((float = v.round(1)) && (float % 1.0 == 0) ? float.to_i.to_s : float.to_s) rescue v.to_s
+  end
+
+  def format(k,v, pad)
+    "#{fill(k,pad)}#{v.map{|val| fill(serialize val)}.join('')}\r\n"
+  end
+
+  def fill(str, length=12)
+    "#{str}#{" " * (length - str.length)}"
+  end
 
 

@@ -44,7 +44,6 @@ class HerokuBench::CLI < Thor
     update
   end
 
-
   desc "ab [options] [http[s]://]hostname[:port]/path", "Run apache-bench using a single one-off dyno"
   long_desc <<-LONGDESC
   'hb ab' will run apache-bench, using a one-off dyno on Heroku in order
@@ -73,7 +72,6 @@ class HerokuBench::CLI < Thor
       multi(num_dynos, *args)
   end
 
-
   desc "multi NUMBER [options] [http[s]://]hostname[:port]/path", "Run apache-bench, using multiple one-off dynos"
   long_desc <<-LONGDESC
   'hb multi' will run apache-bench, using multiple one-off dynos in order
@@ -95,48 +93,36 @@ class HerokuBench::CLI < Thor
       bencher_path = File.expand_path("../bencher.rb",__FILE__)
       num_dynos = dynos.to_i
 
-      results = []
       running_procs = {}
-      progesses = {}
       ab_command = "ab #{args.join(' ')}"
 
       p_bar = ProgressBar.create(:title=>'Benching',:total=>1 + num_dynos*100)
+      summary_result  = ApacheBenchSummaryResult.new
 
       num_dynos.times do  |n|
         t_file = Tempfile.new("hbench_out_#{n}") 
         pid = spawn( "ruby #{bencher_path} \"#{ab_command} \" --app #{config[:app]}", :out=>t_file.path, :err=>null_dev)
+
         running_procs[pid] = t_file
-        progesses[pid] = 0
+        summary_result.add_result(ApacheBenchResult.new(t_file))
         puts t_file.path if options[:verbose]
       end
 
 
       until running_procs.empty?
         begin
-          complete_results = Timeout.timeout(1) do
+          complete_results = Timeout.timeout(0.5) do
             pid = Process.wait
-            results.push running_procs.delete(pid)
-            p_bar.progress += 100 - progesses[pid]
-            progesses[pid] = 100
+            running_procs.delete(pid)
           end
         rescue Timeout::Error
-          running_procs.each do |pid, tfile|
-            progress = get_progress(tfile)
-            p_bar.progress += progress - progesses[pid]
-            progesses[pid] = progress
-          end
+          diff = summary_result.get_progress() - p_bar.progress
+          p_bar.progress+= diff
         end
       end
+
       p_bar.finish
-      
-      summary_result  = ApacheBenchSummaryResult.new
-
-      results.each  do |tfile|
-        summary_result.add_result(ApacheBenchResult.new(tfile))
-      end 
-
       summary_result.print()
-
 
     rescue Interrupt
       say "Exiting...Please be patient"
@@ -145,37 +131,35 @@ class HerokuBench::CLI < Thor
       say "Done"
     rescue => exception
       say("HerokuBench ran into an unexpected exception. Please contact @wcdolphin",:red)
+
+      begin
+        kill_running_procs(running_procs)
+        kill_running_dynos()
+      rescue
+      end #squelch exceptions when killing procs
+
       say(exception,:red)
       puts exception.backtrace
     end
   end
 
+
+  def update
+    error "no app yet, create first" unless config[:app]
+
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        system "git init -q"
+        system "git remote add origin git@github.com:wcdolphin/heroku-benchserver.git"
+        system "git remote add heroku git@#{heroku_git_domain}:#{config[:app]}.git"
+        pullres = capture { system "git pull --quiet origin master"}
+        pushres = capture { system "git push heroku master --quiet"}
+      end
+    end
+  end
+
   private
 
-  # Attemptes to parse a value as a Float or integer, defaulting to the original
-  # string if unsuccesful.
-  def parse(v)
-    ((float = Float(v)) && (float % 1.0 == 0) ? float.to_i : float) rescue v
-  end
-
-  # pretty much the opposite of parse. Returns a string of the best way
-  # to represent a float, int or string value
-  def serialize(v)
-    ((float = v.round(1)) && (float % 1.0 == 0) ? float.to_i.to_s : float.to_s) rescue v.to_s
-  end
-
-  # Returns the approximate progress for apache bench from a given file.
-  # Each increment is 10%, as per the output of ApacheBench.
-  def get_progress(tfile)
-    tfile.rewind
-
-
-    progress = tfile.each_line.collect do |line|
-      group = line.scan(/Completed (\d+) requests/)
-      group = group.empty? ? 0 : group[0][0]
-    end
-    progress.reject{|x| x == 0}.length * 10
-  end
 
   def kill_running_procs(running_procs)
       print "Killing running processes"
@@ -193,45 +177,6 @@ class HerokuBench::CLI < Thor
       unless dyno_name.nil? or dyno_name.empty?
         capture {Heroku::Command.run("ps:stop", ["#{dyno_name[0][0]}","--app", "#{config[:app]}"])}
         print '.'
-      end
-    end
-  end
-
-  def format(k,v, pad)
-    "#{fill(k,pad)}#{v.map{|val| fill(serialize val)}.join('')}\r\n"
-  end
-
-  def fill(str, length=12)
-    "#{str}#{" " * (length - str.length)}"
-  end
-
-  def get_result_hash(f)
-    result_hash = {}
-    f.each_line do |line|
-      @@result_type.each do |k,v|
-        group = line.scan(v)
-        if not group.nil? and group.length.equal? 1
-          capture = group[0].map {|v| parse v} #convert to float/int/etc
-          result_hash[k] = {} unless result_hash.has_key?(k)
-          res_key = capture[0]
-          res_values = capture.slice(1, capture.length)
-          result_hash[k][res_key] = res_values
-        end
-      end
-    end
-    result_hash
-  end
-
-  def update
-    error "no app yet, create first" unless config[:app]
-
-    Dir.mktmpdir do |dir|
-      Dir.chdir(dir) do
-        system "git init -q"
-        system "git remote add origin git@github.com:wcdolphin/heroku-benchserver.git"
-        system "git remote add heroku git@#{heroku_git_domain}:#{config[:app]}.git"
-        pullres = capture { system "git pull --quiet origin master"}
-        pushres = capture { system "git push heroku master --quiet"}
       end
     end
   end
