@@ -25,34 +25,42 @@ class BaseResult < Thor
 end
 
 class ApacheBenchResult < BaseResult
-  attr_accessor :result_hash, :result_tfile
-  @@result_regexes = {
-    :connection_times=>/(.+):\s+\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)/,
-    :generic_result=> /^([\w\s]+):\s*([\d|\.]+)/,
-    :response_time_cdf=>/(\d+%)\s+(\d+)/
-  }
-  @@summable_fields = ["Complete requests","Failed requests", "Write errors", "Requests per second", "Total transferred", "HTML transferred", "Concurrency Level"]
-  @@averageable_fields = ["Connect", "Processing", "Waiting", "Total", "Time per request", "Time taken for tests"]
-  @@maxable_fields    = ["50%", "66%", "75%", "80%", "90%", "95%", "98%", "99%","100%"]
 
-	def initialize(temp_file)
-		@result_hash = {}
-		@result_tfile = temp_file
-		temp_file.each_line do |line|
-		  @@result_regexes.each do |type,v|
-		    group = line.scan(v)
-		    if not group.nil? and group.length.equal? 1
-		      capture = group[0].map {|v| parse v} #convert to float/int/etc
-		      res_key = capture[0]
-		      res_values = capture.slice(1, capture.length)
+    attr_accessor :result_tfile
+    @@result_regexes = {
+      :connection_times=>/(.+):\s+\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)\s+([\d|\.]+)/,
+      :generic_result=> /^([\w\s]+):\s*([\d|\.]+)/,
+      :response_time_cdf=>/(\d+%)\s+(\d+)/
+    }
+    @@summable_fields = ["Complete requests","Failed requests", "Write errors", "Requests per second", "Total transferred", "HTML transferred", "Concurrency Level"]
+    @@averageable_fields = ["Connect", "Processing", "Waiting", "Total", "Time per request", "Time taken for tests"]
+    @@maxable_fields    = ["50%", "66%", "75%", "80%", "90%", "95%", "98%", "99%","100%"]
 
-		      @result_hash[type] = {} unless @result_hash.has_key? type
-		      @result_hash[type][res_key] = res_values.length == 1 ? res_values[0] : res_values  
-		    end
-		  end
-		 end
-	end
+  no_commands do
+  	def initialize(temp_file)
+      @result_tfile = temp_file
+  	end
 
+  	def result_hash()
+      @result_tfile.rewind
+      resulting_hash = {}
+      @result_tfile.each_line do |line|
+        @@result_regexes.each do |type,v|
+          group = line.scan(v)
+          if not group.nil? and group.length.equal? 1
+            capture = group[0].map {|v| parse v} #convert to float/int/etc
+            res_key = capture[0]
+            res_values = capture.slice(1, capture.length)
+
+            resulting_hash[type] = {} unless resulting_hash.has_key? type
+            resulting_hash[type][res_key] = res_values.length == 1 ? res_values.first : res_values  
+            break
+          end
+        end
+       end
+       resulting_hash
+  	end
+  end
 end
 
 class ApacheBenchSummaryResult < ApacheBenchResult
@@ -67,7 +75,6 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 
 		def get_summary_result()
 			summary_result_hash = {}
-
 			@results.each do |result|
 				result.result_hash.each do |result_type, res_type_hashes| 
 					summary_result_hash[result_type] = {} unless summary_result_hash.has_key? result_type
@@ -92,15 +99,12 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 				end
 			end
 
-			summary_result_hash		
+			summary_result_hash
 		end
 
-		def is_empty?
-			self.get_summary_result().empty?
-		end
 		def print
 			summary = self.get_summary_result()
-			if self.is_empty?
+			if summary.empty?
 				say("Herokubench ran into an error while executing ApacheBench. It is likely there was a syntax error in your command. Please see output below.", :red)
 				@results.first.result_tfile.rewind
 				@results.first.result_tfile.each_line do |line|
@@ -108,19 +112,18 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 				end
 				return
 			end
-			puts "\t Cumulative results, summed across dynos"
-			puts ""
+			say("Cumulative results, summed across dynos",:bold) 
 			summary[:generic_result].each{|k,v| printf "%-20s %s\n", k + ":",v}
 
-			puts ""
-			puts "\t Connection Times (ms), median across dynos"
-			printf "%-20s %-6s %-6s %-6s %s\n", "","min", "mean", "[+/-sd]" ,"median","max"
+      say ""
+      say("Connection Times (ms), median across dynos",:bold)
+			printf "%-20s %-8s %-8s %-8s %s\n", "","min", "mean", "[+/-sd]" ,"median","max"
 			summary[:connection_times].each do |k,v|
-				printf "%-20s %-6s %-6s %-6s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
+				printf "%-20s %-8s %-8s %-8s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
 			end
-			puts ""
-			puts "\t Percentage of the requests served within a certain time (ms)"
-			puts "\t across dynos"
+
+      say ""
+			say("Percentage of the requests served within a certain time (ms) across dynos", :bold)
 			summary[:response_time_cdf].each{|k,v| printf "  %-20s %s\n", k,v}
 
 		end

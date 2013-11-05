@@ -61,7 +61,10 @@ class HerokuBench::CLI < Thor
       unless concurrency_level_index.nil? or num_requests_index.nil? then
         num_requests = args[num_requests_index + 1].to_i
         concurrency_level = args[concurrency_level_index + 1].to_i
+
         num_dynos = (concurrency_level/50).to_i
+        num_dynos = 1 if num_dynos ==0
+
         say "Inferred #{num_dynos} instances" if options[:verbose]
         args[args.index("-n") + 1] = num_requests / num_dynos
         args[args.index("-c") + 1] = concurrency_level/ num_dynos
@@ -90,15 +93,16 @@ class HerokuBench::CLI < Thor
       say "Benching with #{dynos} dynos and arguments #{args}" if options[:verbose]
 
       bencher_path = File.expand_path("../bencher.rb",__FILE__)
-      numdynos = dynos.to_i
+      num_dynos = dynos.to_i
+
       results = []
       running_procs = {}
       progesses = {}
       ab_command = "ab #{args.join(' ')}"
 
-      p_bar = ProgressBar.create(:title=>'Benching',:total=>1 + numdynos*100)
+      p_bar = ProgressBar.create(:title=>'Benching',:total=>1 + num_dynos*100)
 
-      numdynos.times do  |n|
+      num_dynos.times do  |n|
         t_file = Tempfile.new("hbench_out_#{n}") 
         pid = spawn( "ruby #{bencher_path} \"#{ab_command} \" --app #{config[:app]}", :out=>t_file.path, :err=>null_dev)
         running_procs[pid] = t_file
