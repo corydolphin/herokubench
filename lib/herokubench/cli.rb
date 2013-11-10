@@ -44,14 +44,14 @@ class HerokuBench::CLI < Thor
     update
   end
 
-  desc "ab [options] [http[s]://]hostname[:port]/path", "Run apache-bench using a single one-off dyno"
+  desc "ab [options] [http[s]://]hostname[:port]/path", "Run apache-bench automatically spreading over dynos as necessary"
   long_desc <<-LONGDESC
-  'hb ab' will run apache-bench, using a one-off dyno on Heroku in order
-  to best benchmark the performance of your webservice.
+  'hb ab' will run apache-bench, splitting the work between up between as many dynos as necessary, for a maximum of
+  100 concurrent connections per dyno. The arguments are passed directly to ab.
 
   For more information, run `hb ab help`
 
-  > $ hb ab -c 100 -n 1000 http://www.google.com
+  > $ hbench ab -c 100 -n 1000 http://www.google.com
   LONGDESC
 
   def ab(*args)
@@ -61,33 +61,34 @@ class HerokuBench::CLI < Thor
         num_requests = args[num_requests_index + 1].to_i
         concurrency_level = args[concurrency_level_index + 1].to_i
 
-        num_dynos = (concurrency_level/50).to_i
+        num_dynos = (concurrency_level/100.0).ceil
         num_dynos = 1 if num_dynos ==0
 
         say "Inferred #{num_dynos} instances" if options[:verbose]
-        args[args.index("-n") + 1] = num_requests / num_dynos
-        args[args.index("-c") + 1] = concurrency_level/ num_dynos
+        args[args.index("-n") + 1] = (num_requests / num_dynos).to_i
+        args[args.index("-c") + 1] = (concurrency_level / num_dynos).to_i
       end
       num_dynos ||= 1
       multi(num_dynos, *args)
   end
 
-  desc "multi NUMBER [options] [http[s]://]hostname[:port]/path", "Run apache-bench, using multiple one-off dynos"
+  desc "multi NUMDYNOS [options] [http[s]://]hostname[:port]/path", "Run apache-bench, using multiple one-off dynos"
   long_desc <<-LONGDESC
-  'hb multi' will run apache-bench, using multiple one-off dynos in order
+  'hbench multi' will run apache-bench, using a specfied number of dynos in order
   to incrase the throughput of your benchmark.
 
   The arguments are identical to that of 'hb ab' with the addition
-  of the 'NUMBER' argument, representing the number of one-off dynos
+  of the 'NUMDYNOS' argument, representing the number of one-off dynos
   to execute your benchmark on.
 
-  > $ hb multi 5 http://www.google.com
+  > $ hbench multi 5 http://www.google.com
   LONGDESC
   def multi(dynos, *args)
     error "no app yet, create first" unless config[:app]
     error "Number of dynos must be an integer greater than 1" unless dynos.to_i >= 1
 
     begin
+      say "Using #{config[:app]}" if options[:verbose] 
       say "Benching with #{dynos} dynos and arguments #{args}" if options[:verbose]
 
       bencher_path = File.expand_path("../bencher.rb",__FILE__)
@@ -144,8 +145,10 @@ class HerokuBench::CLI < Thor
   end
 
 
+
+  desc "update", "Updates your remote bench server"
   def update
-    error "no app yet, create first" unless config[:app]
+    error "No app yet, create first" unless config[:app]
 
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do

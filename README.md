@@ -8,29 +8,29 @@ A build server in the cloud, heavily inspired by Vulcan.
 
 ## Usage
 
-    $ hb help
-    ommands:
-      hb ab URL           # Run apache-bench, using a single, one-off Heroku dyno
-      hb create APP_NAME  # Create your personal bench-server on Heroku
-      hb help [COMMAND]   # Describe available commands or one specific command
-      hb multi URL        # Run apache-bench, using multiple one-off dynos
-    
+    $ hbench help
+    commands:
+      hbench ab [options] [http[s]://]hostname[:port]/path            # Run apache-bench using a single one-off dyno
+      hbench create APP_NAME                                          # Create your personal bench-server on Heroku
+      hbench help [COMMAND]                                           # Describe available commands or one specific command
+      hbench multi NUMBER [options] [http[s]://]hostname[:port]/path  # Run apache-bench, using multiple one-off dynos
+      hbench update                                                   # Updates your remote bench server
+
     Options:
       [--verbose]
-
 
 
 ## Examples
 
 ### Create a Bench Server
-    $ hb create hbench-david
+    $ hbench create hbench-david
     Creating hbench-david... done, stack is cedar
     http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
     ...
 
 ### Bench
 
-    $ hb http://nodejssimple.herokuapp.com/
+    $ hbench -c 100 -n 1000 http://nodejssimple.herokuapp.com/
       Running one-off dyno, please be patient
       Running `ab -c 1000 -n 10000 http://nodejssimple.herokuapp.com/` attached to terminal... up, run.4045
       This is ApacheBench, Version 2.3 <$Revision: 1430300 $>

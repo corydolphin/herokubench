@@ -71,6 +71,11 @@ class ApacheBenchResult < BaseResult
       end
       progress.reject{|x| x == 0}.length * 10
     end
+
+
+    def unlink()
+      @result_tfile.unlink
+    end
   end
 end
 
@@ -86,6 +91,10 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 
     def get_progress()
       @results.collect{|r| r.get_progress}.inject(:+)
+    end
+
+    def unlink()
+      @results.each{|r| r.unlink}
     end
 
 		def get_summary_result()
@@ -137,10 +146,11 @@ class ApacheBenchSummaryResult < ApacheBenchResult
 				printf "%-20s %-8s %-8s %-8s %s\n",k +":", v[0], v[1], v[2], v[3], v[4], v[5]
 			end
 
-      say ""
-			say("Percentage of the requests served within a certain time (ms) across dynos", :bold)
-			summary[:response_time_cdf].each{|k,v| printf "  %-20s %s\n", k,v}
-
+      if summary.has_key? :response_time_cdf #valid ab results can have no result CDF if there is only one response
+        say ""
+        say("Percentage of the requests served within a certain time (ms) across dynos", :bold)
+        summary[:response_time_cdf].each{|k,v| printf "\t%-20s %s\n", k,v}
+      end
 		end
 	end
 end
@@ -148,7 +158,8 @@ end
 
 
 private
-
+# Parses a value as a Float or integer, defaulting to the original
+# string if unsuccesful.
 def parse(v)
   ((float = Float(v)) && (float % 1.0 == 0) ? float.to_i : float) rescue v
 end
@@ -157,32 +168,10 @@ def deep_average(arr)
 	result = []
 	if not arr.empty? and arr[0].is_a? Array #we need to do a 'deep' average.
 		arr[0].each_index do |i|
-			result[i] = arr.collect {|a| a[i]/arr.length.to_f}.inject(:+)
+			result[i] = arr.collect {|a| a[i]/arr.length.to_f}.inject(:+).round(1)
 		end
 		result
 	else	
-		arr.collect {|a| a/arr.length}.inject(:+)
+		arr.collect {|a| a/arr.length}.inject(:+).round(1)
 	end
 end
-
-  # Parses a value as a Float or integer, defaulting to the original
-  # string if unsuccesful.
-  def parse(v)
-    ((float = Float(v)) && (float % 1.0 == 0) ? float.to_i : float) rescue v
-  end
-
-  # pretty much the opposite of parse. Returns a string of the best way
-  # to represent a float, int or string value
-  def serialize(v)
-    ((float = v.round(1)) && (float % 1.0 == 0) ? float.to_i.to_s : float.to_s) rescue v.to_s
-  end
-
-  def format(k,v, pad)
-    "#{fill(k,pad)}#{v.map{|val| fill(serialize val)}.join('')}\r\n"
-  end
-
-  def fill(str, length=12)
-    "#{str}#{" " * (length - str.length)}"
-  end
-
-
