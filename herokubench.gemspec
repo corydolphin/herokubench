@@ -7,17 +7,14 @@ Gem::Specification.new do |gem|
 
   gem.author      = "Cory Dolphin"
   gem.email       = "wcdolphin@gmail.com"
-  gem.homepage    = "https://github.com/wcdolphin/heroku-bench"
+  gem.homepage    = "http://corydolphin.com/herokubench"
   gem.summary     = "A gem to help load testing web applications deployed on AWS or Heroku, using apache-bench"
   gem.description = <<-EOF
       Make it rain on the cloud.
 
-      herokubench, or hb for short, is a simple gem which eanbles you to easily load test websites,
-      using a server hosted by Heroku (on AWS). The gem manages deploying
-      an app with no running dynos (free), and abuses the concept of one-off
-      jobs to run the Apache Benchmark, ab.
+      Herokubench allows you to easily load test websites, from the cloud, for free. Use hundreds of free dynos on Heroku to run apache-bench, in the same way you would run it locally.
 
-      Confused? Checkout `hb help`
+      Confused? Checkout `hbench help`
   EOF
   gem.executables = ["hbench", "herokubench"]
   gem.license     = "MIT"
