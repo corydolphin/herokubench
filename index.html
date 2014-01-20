@@ -1,75 +1,69 @@
 <!DOCTYPE html>
-<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
-<head>
-  <meta charset="utf-8" />
+<html>
 
-  <!-- Set the viewport width to device width for mobile -->
-  <meta name="viewport" content="width=device-width" />
-  <title>Heroku-Bench | Heroku performance testing tool </title>
-  <meta name="description" content="Heroku-Bench | A benchmark and load testing tool using Heroku's free cloud">
-  <meta name="keywords" content="Heroku, benchmark, heroku-bench, loadtest, apache-bench, wrk">
-  <link rel="stylesheet" href="css/normalize.css">
-  <link rel="stylesheet" href="css/foundation.css">
-  <link rel="stylesheet" href="css/hbench.css">
-  <link href='http://fonts.googleapis.com/css?family=Lora|Istok+Web' rel='stylesheet' type='text/css'>
-</head>
-<body>
-  <div class="row hide-for-small">
-    <div class="large-12 columns">
-      <nav class="top-bar"></nav>
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Herokubench : Distributed benchmark and load testing tool using Heroku&#39;s free cloud" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Herokubench</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/wcdolphin/herokubench">View on GitHub</a>
+
+          <h1 id="project_title">Herokubench</h1>
+          <h2 id="project_tagline">Distributed benchmark and load testing tool using Heroku&#39;s free cloud</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/wcdolphin/herokubench/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/wcdolphin/herokubench/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
     </div>
-  </div>
 
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>
+<a name="heroku-bench" class="anchor" href="#heroku-bench"><span class="octicon octicon-link"></span></a>Heroku Bench.</h3>
 
-  <div class="row">
-    <div class="title small-12 small-centered large-uncentered large-5 columns">
-      <div><h1>hbench</h1></div>
-      <div class="bench"> <div></div><div></div><div></div></div>
-    </div>
-    <div class="intro small-12 small-centered large-uncentered large-5 columns">
-      <div class="top-shim hide-for-small">
-      </div>
-      <p>Herokubench allows you to easily load test websites, from the cloud, for free. Use hundreds of free dynos on <em>Heroku</em> to run <em>apache-bench</em>, in the same way you would run it locally. </p>
-    </div>
-  </div>
+<p>Herokubench allows you to easily load test websites, from the cloud, for free. Use hundreds of free dynos on Heroku to run apache-bench, in the same way you would run it locally.</p>
 
-  <div class="row">
-    <div class="large-10 columns">
-      <h2> Installing Heroku Bench</h2>
-      <div class="panel radius">
-        <div class="row">
-          <div class="large-12 small-12 columns">
-            <code class="bash">gem install </code><code> herokubench</code>
-          </div>
-        </div>
-      </div>
-      <h2> Getting Started</h2>
-      <p> Using HerokuBench is as easy as using apache bench. </p>
-      <div class="panel radius">
-        <div class="row">
-          <div class="large-12 small-12 columns">
-            <code class="bash">hbench ab</code><code> -c 100 -n 10000 http://www.google.com/</code>
-          </div>
-        </div>
-      </div>
-      <h2> Making it Rain</h2>
-      <p> Hbench shines when running a load test with hundreds of thousands of requests per second. Unlike running apache-bench from your own PC, Hbench distributes the requests across a number of dynos, allowing far higher throughput. Testing with 10,000 concurrent connections is the same as testing with 100.</p>
-      <div class="panel radius">
-        <div class="row">
-          <div class="large-12 small-12 columns">
-            <code class="bash">hbench ab</code><code> -c 10000 -n 1000 http://www.google.com/</code>
-          </div>
-        </div>
-      </div>
-      <h2> Example usage</h2>
-      <p> Using Hbench on a simple nodejs server</p>
-      <div class="panel radius">
-        <div class="row">
-          <div class="large-12 small-12 columns">
-            <code class="bash">hbench ab</code><code> -c 1000 -n 10000 http://nodejssimple.herokuapp.com/</code>
-            <pre><code>
-        <b>Cumulative results, summed across dynos</b>
+<h2>
+<a name="installing" class="anchor" href="#installing"><span class="octicon octicon-link"></span></a>Installing</h2>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>gem install herokubench
+</pre></div>
+
+<h2>
+<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p>Using HerokuBench is as easy as using apache bench. The interface is the same, but the actions are distributed!</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>hbench ab -c 100 -n 10000 http://www.google.com/
+</pre></div>
+
+<h2>
+<a name="making-it-rain" class="anchor" href="#making-it-rain"><span class="octicon octicon-link"></span></a>Making it rain</h2>
+
+<p>HerokuBench shines when running a load test with thousands of requests per second. Unlike running apache-bench from your own PC, Hbench distributes the requests across a number of dynos, allowing far higher throughput. Testing with 10,000 concurrent connections is the same as testing with 100.</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>hbench ab -c 10000 -n 1000 http://www.google.com/
+</pre></div>
+
+<h2>
+<a name="example-result" class="anchor" href="#example-result"><span class="octicon octicon-link"></span></a>Example Result</h2>
+
+<pre><code>hbench ab -c 1000 -n 10000 http://nodejssimple.herokuapp.com/
+
+        Cumulative results, summed across dynos
         Server Port:         80
         Document Length:     12
         Concurrency Level:   1000
@@ -83,14 +77,14 @@
         Time per request:    7.1
         Transfer rate:       21.03
 
-        <b>Connection Times (ms), median across dynos</b>
+        Connection Times (ms), median across dynos
                              min      mean     [+/-sd]  median
         Connect:             1.3      3.0      3.5      1.6
         Processing:          185.9    641.1    427.7    481.1
         Waiting:             185.3    641.0    427.7    481.0
         Total:               190.9    644.2    428.0    483.3
 
-        <b>Percentage of the requests served within a certain time (ms) across dynos</b>
+        Percentage of the requests served within a certain time (ms) across dynos
           50%                  551
           66%                  671
           75%                  854
@@ -100,52 +94,19 @@
           98%                  1777
           99%                  3422
           100%                 7219
-              </code></pre>
-          </div>
-
-        </div>
-      </div>
-      <h3> New Relic Monitoring results</h3>
-      <div class="panel radius" style="text-align:center;">
-        <iframe src="https://rpm.newrelic.com/public/charts/evkSP4rHJnO" width="500" height="300" scrolling="no" frameborder="no"></iframe>
-      </div>
-
-
-      <h2> Options</h2>
-      <p> Hbench exposes the same options as Apache Bench</p>
-      <div class="panel radius">
-        <div class="row">
-          <div class="large-12 small-12 columns">
-            <code class="bash">hbench help</code>
-          </div>
-        </div>
-      </div>
-
-
+</code></pre>
+      </section>
     </div>
-  </div>
-  <script>
-  document.write('<script src=js/vendor/' +
-    ('__proto__' in {} ? 'zepto' : 'jquery') +
-    '.js><\/script>')
-  </script>
-  <script src="js/foundation.min.js"></script>
-  <script>
-    $(document).foundation();
-  </script>
-  <!-- End Footer -->
 
-  <script src="js/vendor/custom.modernizr.js"></script>
-  <script>
-    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Herokubench maintained by <a href="https://github.com/wcdolphin">wcdolphin</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
 
-    ga('create', 'UA-39970641-2', 'corydolphin.com');
-    ga('send', 'pageview');
+    
 
-  </script>
-
-</body>
+  </body>
 </html>
