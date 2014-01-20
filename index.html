@@ -37,6 +37,11 @@
 <p>Herokubench allows you to easily load test websites, from the cloud, for free. Use hundreds of free dynos on Heroku to run apache-bench, in the same way you would run it locally.</p>
 
 <h2>
+<a name="goals" class="anchor" href="#goals"><span class="octicon octicon-link"></span></a>Goals</h2>
+
+<p>This project was created to make it easier to load tests web apps built on Heroku. I was upset at Blitz.io's high price and limitations, so I built this. </p>
+
+<h2>
 <a name="installing" class="anchor" href="#installing"><span class="octicon octicon-link"></span></a>Installing</h2>
 
 <div class="highlight highlight-sh"><pre><span class="nv">$ </span>gem install herokubench
@@ -95,6 +100,21 @@
           99%                  3422
           100%                 7219
 </code></pre>
+
+<h2>
+<a name="options" class="anchor" href="#options"><span class="octicon octicon-link"></span></a>Options</h2>
+
+<p>Everyone likes options!</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span> hbench <span class="nb">help</span>
+Commands:
+  hbench ab <span class="o">[</span>options<span class="o">]</span> <span class="o">[</span>http<span class="o">[</span>s<span class="o">]</span>://<span class="o">]</span>hostname<span class="o">[</span>:port<span class="o">]</span>/path              <span class="c"># Run apache-bench automatically spreading over dynos as necessary</span>
+  hbench create APP_NAME                                            <span class="c"># Create your personal bench-server on Heroku</span>
+  hbench <span class="nb">help</span> <span class="o">[</span>COMMAND<span class="o">]</span>                                             <span class="c"># Describe available commands or one specific command</span>
+  hbench multi NUMDYNOS <span class="o">[</span>options<span class="o">]</span> <span class="o">[</span>http<span class="o">[</span>s<span class="o">]</span>://<span class="o">]</span>hostname<span class="o">[</span>:port<span class="o">]</span>/path  <span class="c"># Run apache-bench, using multiple one-off dynos</span>
+  hbench update                                                     <span class="c"># Updates your remote bench server</span>
+
+</pre></div>
       </section>
     </div>
 
@@ -106,7 +126,17 @@
       </footer>
     </div>
 
-    
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-39970641-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
 
   </body>
 </html>
