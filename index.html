@@ -1,36 +1,35 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
   <head>
-    <meta charset='utf-8' />
-    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
-    <meta name="description" content="Herokubench : Distributed benchmark and load testing tool using Heroku&#39;s free cloud" />
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Herokubench by wcdolphin</title>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Herokubench</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
+    <div class="wrapper">
+      <header>
+        <h1 class="header">Herokubench</h1>
+        <p class="header">Distributed benchmark and load testing tool using Heroku&#39;s free cloud</p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/wcdolphin/herokubench">View on GitHub</a>
+        <ul>
+          <li class="download"><a class="buttons" href="https://github.com/wcdolphin/herokubench/zipball/master">Download ZIP</a></li>
+          <li class="download"><a class="buttons" href="https://github.com/wcdolphin/herokubench/tarball/master">Download TAR</a></li>
+          <li><a class="buttons github" href="https://github.com/wcdolphin/herokubench">View On GitHub</a></li>
+        </ul>
 
-          <h1 id="project_title">Herokubench</h1>
-          <h2 id="project_tagline">Distributed benchmark and load testing tool using Heroku&#39;s free cloud</h2>
+        <p class="header">This project is maintained by <a class="header name" href="https://github.com/wcdolphin">wcdolphin</a></p>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/wcdolphin/herokubench/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/wcdolphin/herokubench/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
+      </header>
+      <section>
         <h3>
 <a name="heroku-bench" class="anchor" href="#heroku-bench"><span class="octicon octicon-link"></span></a>Heroku Bench.</h3>
 
@@ -50,7 +49,7 @@
 <h2>
 <a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h2>
 
-<p>Using HerokuBench is as easy as using apache bench. The interface is the same, but the actions are distributed!</p>
+<p>Using HerokuBench is as easy as using apache bench. The interface is the same, but the actions are distributed! In the simplest of cases, hbench only needs to know three things: the number of concurrent connections (the 'c' option), the <em>total</em> number of requests (the 'n' option), and the URL to make the request to.</p>
 
 <div class="highlight highlight-sh"><pre><span class="nv">$ </span>hbench ab -c 100 -n 10000 http://www.google.com/
 </pre></div>
@@ -116,17 +115,12 @@ Commands:
 
 </pre></div>
       </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Herokubench maintained by <a href="https://github.com/wcdolphin">wcdolphin</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      <footer>
+        <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
       </footer>
     </div>
-
-              <script type="text/javascript">
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+		          <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -136,7 +130,6 @@ Commands:
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
-
 
   </body>
 </html>
