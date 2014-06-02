@@ -1,6 +1,12 @@
 # Heroku Bench
 
-A build server in the cloud, heavily inspired by Vulcan.
+A distributed loadtesting and benchmarking package built ontop of Heroku's cloud and Apache's apachebench utility.
+
+Capable of loads of millions of requests per second, for free.
+
+![screen shot 2014-06-02 at 3 59 03 pm](https://cloud.githubusercontent.com/assets/446889/3154424/b4f6ceb6-eaa9-11e3-9de8-3b65bf379b45.png)
+
+
 
 ## Install
 
@@ -23,67 +29,56 @@ A build server in the cloud, heavily inspired by Vulcan.
 ## Examples
 
 ### Create a Bench Server
-    $ hbench create hbench-david
-    Creating hbench-david... done, stack is cedar
-    http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
-    ...
+```sh
+$ hbench create hbench-david
+Creating hbench-david... done, stack is cedar
+http://hbench-david.herokuapp.com/ | git@heroku.com:hbench-david.git
+...
+```
 
 ### Bench
+Make 10,000 requests using 100 concurrent connections
+```sh
+$ hbench -c 100 -n 10000 http://simplewsgi.herokuapp.com/
+```
 
-    $ hbench -c 100 -n 1000 http://nodejssimple.herokuapp.com/
-      Running one-off dyno, please be patient
-      Running `ab -c 1000 -n 10000 http://nodejssimple.herokuapp.com/` attached to terminal... up, run.4045
-      This is ApacheBench, Version 2.3 <$Revision: 1430300 $>
-      Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
-      Licensed to The Apache Software Foundation, http://www.apache.org/
+Result:
+```sh
+$ hbench -c 100 -n 10000 http://simplewsgi.herokuapp.com/
+Benching: |====================================================================|
+Cumulative results, summed across dynos
+Server Port:         80
+Document Length:     12
+Concurrency Level:   5000
+Time taken for tests: 338.7
+Complete requests:   5000000
+Failed requests:     1715
+Write errors:        0
+Total transferred:   773280562
+HTML transferred:    60553444
+Requests per second: 14930.630000000001
+Time per request:    3.4
+Transfer rate:       47.62
 
-      Benchmarking nodejssimple.herokuapp.com (be patient)
-      Completed 1000 requests
-      Completed 2000 requests
-      Completed 3000 requests
-      Completed 4000 requests
-      Completed 5000 requests
-      Completed 6000 requests
-      Completed 7000 requests
-      Completed 8000 requests
-      Completed 9000 requests
-      Completed 10000 requests
-      Finished 10000 requests
+Connection Times (ms), median across dynos
+                     min      mean     [+/-sd]  median
+Connect:             1.2      2.8      5.5      1.8
+Processing:          2.3      332.8    1013.0   113.6
+Waiting:             0.0      332.1    1012.7   112.8
+Total:               4.1      335.7    1013.1   116.6
+
+Percentage of the requests served within a certain time (ms) across dynos
+	50%                  219
+	66%                  305
+	75%                  378
+	80%                  430
+	90%                  605
+	95%                  983
+	98%                  3636
+	99%                  6202
+	100%                 20933
+```
 
 
-      Server Software:
-      Server Hostname:        nodejssimple.herokuapp.com
-      Server Port:            80
-
-      Document Path:          /
-      Document Length:        12 bytes
-
-      Concurrency Level:      1000
-      Time taken for tests:   9.687 seconds
-      Complete requests:      10000
-      Failed requests:        0
-      Write errors:           0
-      Total transferred:      1322840 bytes
-      HTML transferred:       120000 bytes
-      Requests per second:    1032.32 [#/sec] (mean)
-      Time per request:       968.692 [ms] (mean)
-      Time per request:       0.969 [ms] (mean, across all concurrent requests)
-      Transfer rate:          133.36 [Kbytes/sec] received
-
-      Connection Times (ms)
-                    min  mean[+/-sd] median   max
-      Connect:        1    8  12.8      3      70
-      Processing:    75  513 742.4    297    5077
-      Waiting:       75  512 742.5    296    5077
-      Total:        121  520 743.3    301    5087
-
-      Percentage of the requests served within a certain time (ms)
-        50%    301
-        66%    373
-        75%    403
-        80%    566
-        90%    889
-        95%   1805
-        98%   3967
-        99%   4041
-       100%   5087 (longest request)
+## Questions? Comments? Contributions?
+Please don't hesitate to ask, comment, contribute or critique! I am all ears!
